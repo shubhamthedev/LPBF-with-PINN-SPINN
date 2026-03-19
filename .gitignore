@@ -1,0 +1,5 @@
+__pycache__/
+zlog/
+heat_eqn_3d_pinns.py
+*.sif
+diffusion_spinns/

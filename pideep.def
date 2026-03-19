@@ -1,0 +1,26 @@
+BootStrap: docker
+From: ghcr.io/nvidia/jax:base
+
+%help
+    S-PINN container with JAX, PyTorch, and TensorFlow
+
+%post
+    # Install Python
+    apt-get update && apt-get install -y python3-pip python3-dev
+    
+    # Install JAX with CUDA 12
+    pip3 install --upgrade pip
+    pip install --upgrade "jax[cuda12]"
+    pip3 install optax
+    pip3 install flax
+    
+    # Install other packages
+    pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+    pip3 install tensorflow[and-cuda]
+    pip3 install matplotlib numpy scipy scikit-learn numba
+    pip3 install tqdm h5py pyDOE seaborn pandas sobol-seq mpl-tools
+    pip3 install tensorly
+
+%environment
+    export LC_ALL=C
+    export XLA_FLAGS=--xla_gpu_cuda_data_dir=/usr/local/cuda
