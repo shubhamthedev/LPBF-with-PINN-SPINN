@@ -14,7 +14,7 @@ the 3D transient temperature field during single-track Laser Powder Bed Fusion (
 Both models solve the 3D heat equation without any simulation data. The physics — a Goldak
 volumetric heat source and temperature-dependent material properties for Hastelloy X — is
 enforced entirely through the loss function. A CUDA-accelerated finite-difference (FD) solver
-is used as the ground-truth reference ([FD solver repository](https://github.com/LINK_TO_FD_REPO)).
+is used as the ground-truth reference ([FD solver repository](https://github.com/shubhamthedev/lpbf-fd-solver)).
 
 ## Motivation
 
@@ -69,7 +69,7 @@ CUDA-accelerated explicit forward-Euler finite-difference solver on a 201 × 51 
 (Δt = 1 µs). Temperature-dependent κ(T) and apparent cₚ(T) including latent heat via a
 Gaussian peak.
 
-→ [FD solver repository](https://github.com/LINK_TO_FD_REPO)
+→ [FD solver repository](https://github.com/shubhamthedev/lpbf-fd-solver)
 
 ## Results
 
