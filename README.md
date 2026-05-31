@@ -79,13 +79,13 @@ Gaussian peak.
 **PINN**
 
 <p align="center">
-  <img src="snapshot_t10ms_fair.pdf" width="80%"/>
+  <img src="snapshot_t10ms_fair.png" width="80%"/>
 </p>
 
 **SPINN**
 
 <p align="center">
-  <img src="spinn_v4_t10ms.pdf" width="80%"/>
+  <img src="spinn_v4_t10ms.png" width="80%"/>
 </p>
 
 ### Accuracy (MAPE vs FD reference at t = 10 ms)
@@ -98,4 +98,4 @@ Gaussian peak.
 
 ---
 
-*iRMB, TU Braunschweig, 2025*
+*iRMB, TU Braunschweig, 2026*

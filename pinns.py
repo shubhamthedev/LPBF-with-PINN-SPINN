@@ -523,7 +523,7 @@ Lz_mm     = Lz * 1e3
 # ─────────────────────────────────────────────────────────────────────────────
 # 14.  Plots
 # ─────────────────────────────────────────────────────────────────────────────
-def plot_snapshot(model, t_phys, fname="snapshot.pdf", res=100):
+def plot_snapshot(model, t_phys, fname="snapshot.png", res=100):
     X_xy, Y_xy, T_xy = eval_surface(model, t_phys, res)
     X_xz, Z_xz, T_xz = eval_xz_plane(model, t_phys, res)
 
@@ -605,7 +605,7 @@ def plot_snapshot(model, t_phys, fname="snapshot.pdf", res=100):
     plt.close()
     print(f"  Saved: {fname}")
 
-def plot_centreline(model, t_phys, fname="centreline.pdf"):
+def plot_centreline(model, t_phys, fname="centreline.png"):
     model.eval()
     xs_p = np.linspace(0, Lx, 400)
     xn, yn, zn, tn = nd(xs_p, np.full(400, y_track),
@@ -639,7 +639,7 @@ def plot_centreline(model, t_phys, fname="centreline.pdf"):
     plt.close()
     print(f"  Saved: {fname}")
 
-def plot_losses(hist, fname="loss_history.pdf"):
+def plot_losses(hist, fname="loss_history.png"):
     """
     Loss history plot. No IC curve since hard IC removes that term.
     """
@@ -697,7 +697,7 @@ if __name__ == "__main__":
 
     torch.save(model.state_dict(), "results/pinn_track1_fair.pt")
     print("  Saved: results/pinn_track1_fair.pt")
-    plot_losses(hist, "results/loss_history_fair.pdf")
+    plot_losses(hist, "results/loss_history_fair.png")
 
 
     snapshots = {"t08ms": 8e-3, "t10ms": t_end}
@@ -708,9 +708,9 @@ if __name__ == "__main__":
         print(f"\n{label}  (laser @ x={x_las:.2f} mm):")
         get_melt_pool(model, t_q, res=100)
         plot_snapshot(model, t_q,
-                      fname=f"results/snapshot_{label}_fair.pdf", res=100)
+                      fname=f"results/snapshot_{label}_fair.png", res=100)
         plot_centreline(model, t_q,
-                        fname=f"results/centreline_{label}_fair.pdf")
+                        fname=f"results/centreline_{label}_fair.png")
 
     print(f"\n  Total training time : {total_time:.1f} s ({total_time/60:.2f} min)")
     print("All done.")

@@ -715,14 +715,14 @@ print(f"  Saved best_params → {spinn_save_path}")
 # ══════════════════════════════════════════════════════════════════════════════
 #  15.  GENERATE OUTPUTS
 # ══════════════════════════════════════════════════════════════════════════════
-plot_losses(history, os.path.join(RESULTS_DIR, "spinn_v4_loss.pdf"))
+plot_losses(history, os.path.join(RESULTS_DIR, "spinn_v4_loss.png"))
 
 print("-- Melt Pool Dimensions --")
 for t_val, label in [(8e-3, "t08ms"), (t_end, "t10ms")]:
     print(f"\n  [{label}]  t = {t_val*1e3:.1f} ms")
     melt_pool(best_params, t_val)
     plot_snapshot(best_params, t_val,
-                  os.path.join(RESULTS_DIR, f"spinn_v4_{label}.pdf"))
+                  os.path.join(RESULTS_DIR, f"spinn_v4_{label}.png"))
 
 print(f"\n  Total training time : {total_time:.1f} s ({total_time/60:.2f} min)")
 print("All done.")

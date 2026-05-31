@@ -6,5 +6,7 @@ diffusion_spinns/
 parity_plot.py
 plots.py
 Results_datadriven/
-results/
 results_spinn_v4/
+results/*
+diagnoze.py
+*.pt
