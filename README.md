@@ -1,7 +1,7 @@
 # PINN vs SPINN for LPBF Thermal Modelling
 
 Specialization project at the Institute for Computational Modeling in Civil Engineering (iRMB),
-TU Braunschweig, 2025.
+TU Braunschweig, 2026.
 
 ## Overview
 
