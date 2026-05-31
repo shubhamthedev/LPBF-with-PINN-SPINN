@@ -1,108 +1,101 @@
-# Studienarbeit — PINN & S-PINN for LPBF Temperature Modelling
+# PINN vs SPINN for LPBF Thermal Modelling
 
-> **Work in Progress** — This project is part of an ongoing Studienarbeit and is actively being developed.
+Specialization project at the Institute for Computational Modeling in Civil Engineering (iRMB),
+TU Braunschweig, 2025.
 
----
+## Overview
 
-## What This Is
+This repository contains two physics-informed neural network implementations for predicting
+the 3D transient temperature field during single-track Laser Powder Bed Fusion (LPBF):
 
-This project explores the use of **Physics-Informed Neural Networks (PINNs)** and **Separable PINNs (S-PINNs)** to model the temperature field and melt pool dynamics during **Laser Powder Bed Fusion (LPBF)** — a metal additive manufacturing process.
+- **PINN** — a standard coordinate-based MLP (PyTorch)
+- **SPINN** — a separable per-axis architecture (JAX/Flax)
 
-The core idea is to solve the 3D transient heat equation without any simulation data, by embedding the governing physics directly into the neural network's loss function. The material used is **Hastelloy X**, with fully temperature-dependent thermal properties.
-
----
+Both models solve the 3D heat equation without any simulation data. The physics — a Goldak
+volumetric heat source and temperature-dependent material properties for Hastelloy X — is
+enforced entirely through the loss function. A CUDA-accelerated finite-difference (FD) solver
+is used as the ground-truth reference ([FD solver repository](https://github.com/LINK_TO_FD_REPO)).
 
 ## Motivation
 
-Traditional numerical solvers (FEM, FDM) for LPBF are accurate but expensive. PINNs offer a mesh-free alternative that can, in principle, be faster to query once trained. S-PINNs go a step further by tackling the **curse of dimensionality** that standard PINNs run into when the number of collocation points grows in 3D+time problems.
-
-This project benchmarks both approaches on the same physical problem under fair, controlled conditions.
-
----
+Standard PINNs process every collocation point individually. In a 3D+time problem the number
+of points scales as N⁴, which quickly exhausts GPU memory and training time. SPINNs
+(Cho et al., NeurIPS 2023) decompose the network into four independent axis-networks and
+merge their outputs via outer product, reducing the cost to 4N forward passes. This project
+provides a controlled comparison of both approaches on the same LPBF thermal problem.
 
 ## Problem Setup
 
-- **Domain** — 3.0 × 1.5 × 1.0 mm (x × y × z)
-- **Laser path** — 2.0 mm single track (x = 0.5 mm → 2.5 mm)
-- **Scan speed** — 0.1 m/s, absorbed power 150 W
-- **Beam radius** — 450 µm, penetration depth 500 µm (Goldak model)
-- **Material** — Hastelloy X (temperature-dependent κ and c_p)
-- **Initial condition** — uniform T₀ = 300 K
-- **Boundary conditions** — Robin (convection) on top surface, Neumann (insulated) on all other faces
-
----
-
-## Project Structure
-
-```
-├── pinn/
-│   └── pinn_lpbf.py          # Standard PINN implementation
-├── spinn/
-│   └── spinn_lpbf.py         # Separable PINN implementation
-├── results/
-│   ├── snapshots/            # Temperature field plots
-│   ├── centreline/           # Centreline temperature profiles
-│   └── loss_history/         # Training loss curves
-├── reference/                # Ground truth FD solution (from supervisor)
-└── README.md
-```
-
----
-
-## Current Status
-
-| Task | Status |
+| | |
 |---|---|
-| PINN implementation (single track) | ✅ Done |
-| S-PINN implementation | 🔄 In progress |
-| Domain updated to 2 mm laser path | ✅ Done |
-| Fair comparison setup (hard IC, matched hyperparameters) | ✅ Done |
-| Ground truth FD reference solution | ⏳ Awaiting from supervisor |
-| Melt pool steady-state analysis | 🔄 In progress |
-| Benchmarking PINN vs S-PINN | ⏳ Pending |
-| Final report write-up | ⏳ Pending |
+| **Domain** | 2.0 × 1.5 × 1.0 mm (x × y × z) |
+| **Material** | Hastelloy X (temperature-dependent κ and cₚ) |
+| **Laser** | 150 W absorbed, r = 450 µm, penetration depth = 500 µm |
+| **Scan** | 100 mm/s along x, from x = 0.5 mm to x = 1.5 mm at y = 0.50 mm |
+| **Duration** | 10 ms |
+| **Heat source** | Goldak volumetric model |
+| **Initial condition** | T₀ = 300 K (hard-enforced by network ansatz) |
+| **Top surface (z = 0)** | Robin BC: −κ ∂T/∂z = h(T − T∞), h = 10 W/(m²K) |
+| **Bottom (z = Lz)** | Dirichlet BC: T = 300 K (substrate) |
+| **Side faces** | Neumann BC: ∂T/∂n = 0 (insulated) |
+
+## Models
+
+### PINN (`pinns.py` — PyTorch)
+
+A single MLP maps non-dimensionalized coordinates (x, y, z, t) to temperature.
+
+- **Architecture:** 6 hidden layers × 128 neurons, tanh activation
+- **Hard IC ansatz:** T = T₀ + t · network(x,y,z,t) · ΔT_char — guarantees T(t=0) = T₀ exactly
+- **Collocation:** 4 096 Sobol points + 16 384 laser-clustered points
+- **Training:** two-phase Adam — 12 000 steps with cosine warm restarts (lr = 5×10⁻⁴), then 8 000 steps fine-tuning (lr = 1×10⁻⁵)
+- **Loss:** L_pde + w_bc · L_bc
+- **Includes:** curse-of-dimensionality scaling measurement (`measure_pinn_scaling`) that benchmarks forward+backward pass time and memory at N⁴ collocation grids
+
+### SPINN (`spinns.py` — JAX/Flax)
+
+Four separate axis-MLPs (t, x, y, z) whose rank-64 feature vectors are merged via
+`einsum('tr,xr,yr,zr->txyz')`.
+
+- **Architecture:** 4 × (5 hidden layers × 64 neurons, tanh), rank 64
+- **Hard IC ansatz:** same form as PINN
+- **Collocation:** factorizable lattice — 64×128×96×48 per-axis points with laser-focused clustering; resampled every step
+- **Derivatives:** forward-mode AD (JVP) for all PDE residual terms
+- **Training:** two-phase Adam — 15 000 steps with linear warmup + cosine decay (peak lr = 8×10⁻⁴), then 15 000 steps fine-tuning (lr = 1×10⁻⁵)
+- **Loss:** L_pde + L_bc
+
+### FD Solver (reference — separate repository)
+
+CUDA-accelerated explicit forward-Euler finite-difference solver on a 201 × 51 × 51 grid
+(Δt = 1 µs). Temperature-dependent κ(T) and apparent cₚ(T) including latent heat via a
+Gaussian peak.
+
+→ [FD solver repository](https://github.com/LINK_TO_FD_REPO)
+
+## Results
+
+### Temperature snapshots at t = 10 ms
+
+**PINN**
+
+<p align="center">
+  <img src="snapshot_t10ms_fair.pdf" width="80%"/>
+</p>
+
+**SPINN**
+
+<p align="center">
+  <img src="spinn_v4_t10ms.pdf" width="80%"/>
+</p>
+
+### Accuracy (MAPE vs FD reference at t = 10 ms)
+
+| Plane | PINN | SPINN |
+|---|---|---|
+| xy (top surface) | 2.49 % | 2.30 % |
+| xz (centerline) | 0.90 % | 1.27 % |
+| Combined | 1.69 % | 1.78 % |
 
 ---
 
-## How to Run
-
-**Install dependencies**
-
-```bash
-pip install torch numpy scipy matplotlib
-```
-
-**Train the PINN**
-
-```bash
-python pinn/pinn_lpbf.py
-```
-
-**Train the S-PINN**
-
-```bash
-python spinn/spinn_lpbf.py
-```
-
-Results are saved automatically to the `results/` folder.
-
----
-
-## Key References
-
-- Safari & Wessels (2025) — *PINN and DeepONet for LPBF temperature modelling* (main reference, parameters taken from Table 1)
-- Cho et al. (2023) — *Separable Physics-Informed Neural Networks*, NeurIPS 2023
-- Goldak et al. (1984) — *Double ellipsoid heat source model*
-
----
-
-## Notes
-
-- Parameters follow **Safari & Wessels (2025), Table 1** exactly
-- The PINN uses a **hard initial condition ansatz** so that T = T₀ at t = 0 is satisfied exactly by construction, not through a loss term
-- Melt pool dimensions are measured at the **end of the laser track** (t = 20 ms), where the melt pool is expected to have reached steady state
-- Validation against the finite-difference reference solution from the supervisor is still pending
-
----
-
-*Studienarbeit — Institute for Applied Mechanics, 2026*
+*iRMB, TU Braunschweig, 2025*
