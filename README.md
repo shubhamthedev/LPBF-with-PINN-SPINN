@@ -99,7 +99,7 @@ Gaussian peak.
 **Meltpool comparison**
 
 <p align="center">
-  <img src="meltpool_comparison.png" width="80%"/>
+  <img src="meltpool_comparison_t10ms.png" width="80%"/>
 </p>
 
 ---
