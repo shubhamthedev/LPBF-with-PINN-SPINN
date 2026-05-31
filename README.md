@@ -88,13 +88,19 @@ Gaussian peak.
   <img src="spinn_v4_t10ms.png" width="80%"/>
 </p>
 
-### Accuracy (MAPE vs FD reference at t = 10 ms)
+### Accuracy (MAPE vs FD reference)
 
 | Plane | PINN | SPINN |
 |---|---|---|
 | xy (top surface) | 2.49 % | 2.30 % |
 | xz (centerline) | 0.90 % | 1.27 % |
 | Combined | 1.69 % | 1.78 % |
+
+**Meltpool comparison**
+
+<p align="center">
+  <img src="meltpool_comparison.png" width="80%"/>
+</p>
 
 ---
 
