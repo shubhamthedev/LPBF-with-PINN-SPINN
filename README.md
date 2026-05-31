@@ -50,7 +50,6 @@ A single MLP maps non-dimensionalized coordinates (x, y, z, t) to temperature.
 - **Collocation:** 4 096 Sobol points + 16 384 laser-clustered points
 - **Training:** two-phase Adam — 12 000 steps with cosine warm restarts (lr = 5×10⁻⁴), then 8 000 steps fine-tuning (lr = 1×10⁻⁵)
 - **Loss:** L_pde + w_bc · L_bc
-- **Includes:** curse-of-dimensionality scaling measurement (`measure_pinn_scaling`) that benchmarks forward+backward pass time and memory at N⁴ collocation grids
 
 ### SPINN (`spinns.py` — JAX/Flax)
 
