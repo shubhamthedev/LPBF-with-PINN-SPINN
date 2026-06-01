@@ -8,4 +8,4 @@
 #SBATCH --output=/home/y0113734/heat/zlog/output_%j.log  # Standard output
 
 # Run your singularity command
-singularity exec --nv /home/y0113734/heat/pideep.sif python3 -u spinns.py
+singularity exec --nv /home/y0113734/heat/pideep.sif python3 -u pinns.py
